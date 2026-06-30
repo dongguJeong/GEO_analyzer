@@ -8,6 +8,7 @@ LLM_WEIGHTS = {
     "summary": 0.10,
 }
 
+MAX_METRIC_SCORE = 30 
 
 def calculate_score(
     llm_result: Dict,
@@ -22,9 +23,9 @@ def calculate_score(
 
     for key, weight in LLM_WEIGHTS.items():
         value = llm_result.get(key, 0)
-        llm_score += value * 10 * weight
+        llm_score += (value / 10) * weight
 
-    llm_score *= 0.7
+    llm_score *= 70
 
     # -------------------------
     # HTML Metrics (30점)
@@ -59,7 +60,7 @@ def calculate_score(
     if metrics["word_count"] >= 800:
         metric_score += 5
 
-    metric_score *= (30 / 30)
+    metric_score = (metric_score / MAX_METRIC_SCORE) * 30
 
     # -------------------------
     # Final Score
