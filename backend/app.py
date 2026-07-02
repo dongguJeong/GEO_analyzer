@@ -9,6 +9,10 @@ from database.database import get_db
 
 from fastapi.middleware.cors import CORSMiddleware
 
+from embedding.embedded import Embedder
+from embedding.vector_store import VectorStore
+from rag.retriever import RAGRetriever
+
 app = FastAPI()
 
 app.add_middleware(
@@ -28,16 +32,50 @@ class AnalyzeRequest(BaseModel):
 def get_llm():
     return ClaudeLLM()
 
+embedder = Embedder()
+vector_store = VectorStore(dimension=384)
+
+def get_embedder():
+    return embedder
+
+def get_vector_store():
+    return vector_store
+
+def get_rag_retriever(llm=Depends(get_llm)):
+    return RAGRetriever(embedder, vector_store, llm)
+
+class RAGQueryRequest(BaseModel):
+    question: str
+    k: int = 3
+
+
 @app.post("/analyze")
-async def analyze(request : AnalyzeRequest,llm=Depends(get_llm), db : Session = Depends(get_db)):
+async def analyze(
+    request : AnalyzeRequest,
+    llm=Depends(get_llm), 
+    db : Session = Depends(get_db),
+    embedder=Depends(get_embedder),
+    vector_store=Depends(get_vector_store)
+):
 
     try :
-        return await analyze_url(str(request.url), llm, db)
+        return await analyze_url(str(request.url), llm, db, embedder, vector_store)
     except Exception as e :
         raise HTTPException(
             status_code=500,
             detail=str(e)
         )
+    
+@app.post('/rag/query')
+async def rag_query(
+    request : RAGQueryRequest,
+    retriever : RAGRetriever = Depends(get_rag_retriever)
+):
+    try:
+        return retriever.query(request.question, request.k)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
     
 @app.get('/history')
 def history(db : Session = Depends(get_db)):

@@ -5,12 +5,10 @@ def compute_idf(documents : dict[int ,list[str]]) -> dict[str, float]:
     """
     documents: {doc_id: tokens} 형태 (이미 토큰화된 상태)
     반환값: {word: IDF값}
-
     
     1 : ['geo', '분석' , '검색', '최적],
     2 : ['파이썬', '검색', '엔진']
-    3 : ['geo', 'seo', 최적]
-    
+    3 : ['geo', 'seo', '최적']
 
     >>>
     {'geo': 0.405, '분석': 1.099, '검색': 0.405, '최적': 0.405, '파이썬': 1.099, '엔진': 1.099, 'seo': 1.099}

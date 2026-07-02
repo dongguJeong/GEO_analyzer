@@ -9,7 +9,7 @@ from report.report import grade
 from database.database import SessionLocal
 from database.models import Analysis
 
-async def analyze_url(url : str , llm , db):
+async def analyze_url(url : str , llm , db, embedder=None, vector_store=None):
 
     html = await fetch_html(url)
 
@@ -35,9 +35,12 @@ async def analyze_url(url : str , llm , db):
 
         db.add(result)
         db.commit()
-
-        # id 값을 사용하려면 갱신
         db.refresh(result)
+
+        if embedder and vector_store:
+            embedding = embedder.encode([content])
+            vector_store.add(embedding,[content])
+
 
     finally:
         db.close()
